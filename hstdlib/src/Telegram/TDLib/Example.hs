@@ -1,18 +1,15 @@
 module Telegram.TDLib.Example where
 
-import Telegram.TDLib.Bindings (createClient, destroyClient, recvJSON)
-
-import Control.Exception (bracket)
-import qualified Data.ByteString.Char8 as BS8
+import Telegram.TDLib.API (recv, withClient)
 
 example :: IO ()
 example =
-  bracket createClient destroyClient $ \client ->
+  withClient $ \client ->
     let loop = do
-          update <- recvJSON client 10.0
+          update <- recv client 10.0
           case update of
             Just str -> do
-              BS8.putStrLn str
+              print str
               loop
             Nothing -> pure ()
      in loop
