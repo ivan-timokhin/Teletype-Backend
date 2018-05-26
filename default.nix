@@ -1,6 +1,6 @@
 { nixpkgs ? import <nixpkgs-unstable> {} } :
 
-with nixpkgs; {
+with nixpkgs; rec {
   tdlib = stdenv.mkDerivation {
     name = "tdlib-1.2.0";
     src = fetchFromGitHub {
@@ -23,4 +23,6 @@ with nixpkgs; {
       license = stdenv.lib.licenses.boost;
     };
   };
+
+  hstdlib = import ./hstdlib { pkgs = nixpkgs; inherit tdlib; };
 }
