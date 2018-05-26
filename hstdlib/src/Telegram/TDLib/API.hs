@@ -30,7 +30,7 @@ data AuthorizationState =
 deriveJSON (aesonOptions "authorizationState") ''AuthorizationState
 
 data Update = AuthorizationState
-  { authorization_state :: AuthorizationState
+  { authorizationState :: AuthorizationState
   } deriving (Eq, Show)
 
 deriveJSON (aesonOptions "update") ''Update
