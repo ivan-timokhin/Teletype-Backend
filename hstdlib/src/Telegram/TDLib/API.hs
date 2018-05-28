@@ -1,8 +1,13 @@
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Telegram.TDLib.API
   ( TDLibClient
   , withClient
+  , WithExtra(..)
   , Parameters(..)
   , AuthorizationState(..)
   , Update(..)
@@ -29,7 +34,15 @@ import Telegram.TDLib.Bindings
   , sendJSON
   )
 
-import Data.Aeson (eitherDecodeStrict', encode)
+import Data.Aeson
+  ( FromJSON(parseJSON)
+  , ToJSON(toEncoding, toJSON)
+  , (.:?)
+  , (.=)
+  , eitherDecodeStrict'
+  , encode
+  )
+import qualified Data.Aeson as A
 import Data.Aeson.TH (deriveJSON)
 import Control.Exception (bracket, Exception, throwIO)
 import Data.Int (Int32)
@@ -37,9 +50,28 @@ import Data.ByteString.Lazy (toStrict)
 import Control.Lens.TH (makePrisms)
 import Data.Traversable (for)
 import Data.ByteString (ByteString)
+import Control.Monad (join)
+import qualified Data.HashMap.Strict as HM
 
 withClient :: (TDLibClient -> IO a) -> IO a
 withClient = bracket createClient destroyClient
+
+data WithExtra a b = WithExtra
+  { payload :: a
+  , extra :: Maybe b
+  } deriving (Show, Eq, Functor, Foldable, Traversable)
+
+instance (FromJSON a, FromJSON b) => FromJSON (WithExtra a b) where
+  parseJSON =
+    A.withObject "WithExtra" $ \v ->
+      WithExtra <$> parseJSON (A.Object v) <*> (join <$> v .:? "@extra")
+
+instance (ToJSON a, ToJSON b) => ToJSON (WithExtra a b) where
+  toJSON (WithExtra p e) =
+    case toJSON p of
+      A.Object o -> A.Object (HM.insert "@extra" (toJSON e) o)
+      _ ->
+        error "Whoops! WithExtra expects Object-like type as a first argument"
 
 -- | Contains parameters for TDLib initialisation.
 data Parameters = Parameters
@@ -125,7 +157,9 @@ data ResponseDecodingError = ResponseDecodingError
 
 instance Exception ResponseDecodingError
 
-recv :: TDLibClient -> Double -> IO (Maybe Object)
+type Response = WithExtra Object
+
+recv :: FromJSON a => TDLibClient -> Double -> IO (Maybe (Response a))
 recv client timeout = do
   responseJSON <- recvJSON client timeout
   for responseJSON $ \r ->
@@ -141,5 +175,7 @@ data Function = SetTdlibParameters
 
 deriveJSON functionOptions ''Function
 
-send :: TDLibClient -> Function -> IO ()
+type Request = WithExtra Function
+
+send :: ToJSON a => TDLibClient -> Request a -> IO ()
 send client request = sendJSON client (toStrict $ encode request)
