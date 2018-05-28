@@ -94,8 +94,9 @@ data Parameters = Parameters
 
 deriveJSON (aesonOptions "tdlib") ''Parameters
 
-data AuthorizationState =
-  WaitTdlibParameters
+data AuthorizationState
+  = WaitTdlibParameters
+  | WaitEncryptionKey { is_encrypted :: Bool }
   deriving (Eq, Show)
 
 deriveJSON (aesonOptions "authorizationState") ''AuthorizationState
