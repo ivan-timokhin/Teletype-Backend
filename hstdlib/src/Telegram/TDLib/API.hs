@@ -142,9 +142,16 @@ data Update = AuthorizationState
 deriveJSON (aesonOptions "update") ''Update
 makePrisms ''Update
 
+data Ok =
+  Ok
+  deriving (Eq, Show, Ord, Enum, Bounded, Read)
+
+deriveJSON functionOptions ''Ok
+
 data Object
   = UpdateObj Update
   | ParametersObj Parameters
+  | OkObj Ok
   deriving (Eq, Show)
 
 deriveJSON objectAesonOptions ''Object
