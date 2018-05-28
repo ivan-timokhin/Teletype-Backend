@@ -176,9 +176,10 @@ recv client timeout = do
         ResponseDecodingError {originalResponse = r, errorMessage = err}
       Right object -> pure object
 
-data Function = SetTdlibParameters
-  { parameters :: Parameters
-  } deriving (Eq, Show)
+data Function
+  = SetTdlibParameters { parameters :: Parameters }
+  | CheckDatabaseEncryptionKey { encryption_key :: String }
+  deriving (Eq, Show)
 
 deriveJSON functionOptions ''Function
 
