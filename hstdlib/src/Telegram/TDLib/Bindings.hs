@@ -32,6 +32,7 @@ foreign import ccall "td_json_client_destroy" c_td_json_client_destroy
 -- | An instance of a TDLib client
 newtype TDLibClient =
   TDLibClient (Ptr ())
+  deriving (Eq, Ord)
 
 -- | Creates a new instance of TDLib.
 createClient :: IO TDLibClient
