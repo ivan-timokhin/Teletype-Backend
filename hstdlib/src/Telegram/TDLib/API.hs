@@ -13,7 +13,7 @@ module Telegram.TDLib.API
   , Update(..)
   , _AuthorizationState
   , Object(..)
-  , _Update
+  , _UpdateObj
   , recv
   , Function(..)
   , send
@@ -143,8 +143,8 @@ deriveJSON (aesonOptions "update") ''Update
 makePrisms ''Update
 
 data Object
-  = Update Update
-  | TDLibParameters Parameters
+  = UpdateObj Update
+  | ParametersObj Parameters
   deriving (Eq, Show)
 
 deriveJSON objectAesonOptions ''Object
