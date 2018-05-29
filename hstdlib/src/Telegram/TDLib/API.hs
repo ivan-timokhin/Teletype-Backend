@@ -47,6 +47,7 @@ import Data.Traversable (for)
 import Data.ByteString (ByteString)
 import Control.Monad (join)
 import qualified Data.HashMap.Strict as HM
+import Data.Text (Text)
 
 withClient :: (TDLibClient -> IO a) -> IO a
 withClient = bracket createClient destroyClient
@@ -128,11 +129,27 @@ data AuthorizationState
 
 deriveJSON (AOpt.prefixedCtors "authorizationState") ''AuthorizationState
 
+data OptionValue
+  = OptionValueBoolean { _boolValue :: Bool }
+  | OptionValueEmpty
+  | OptionValueInteger { _intValue :: Int32 }
+  | OptionValueString { _textValue :: Text }
+  deriving (Eq, Show)
+
+deriveJSON
+  (AOpt.namedCtors
+     { A.fieldLabelModifier =
+         A.fieldLabelModifier AOpt.namedCtors . dropWhile (/= 'V')
+     })
+  ''OptionValue
+
 -- A better idea may be to go Object route and have separate type for
 -- each update alternative
-data Update = AuthorizationState
-  { authorizationState :: AuthorizationState
-  } deriving (Eq, Show)
+data Update
+  = AuthorizationState { authorizationState :: AuthorizationState }
+  | Option { name :: Text
+           , value :: OptionValue }
+  deriving (Eq, Show)
 
 deriveJSON (AOpt.prefixedCtors "update") ''Update
 makePrisms ''Update

@@ -1,4 +1,4 @@
-{ mkDerivation, aeson, base, bytestring, lens, stdenv, tdjson
+{ mkDerivation, aeson, base, bytestring, lens, stdenv, tdjson, text
 , unordered-containers
 }:
 mkDerivation {
@@ -6,7 +6,7 @@ mkDerivation {
   version = "0.1.0.0";
   src = ./.;
   libraryHaskellDepends = [
-    aeson base bytestring lens unordered-containers
+    aeson base bytestring lens text unordered-containers
   ];
   librarySystemDepends = [ tdjson ];
   description = "Haskell bindings for Telegram's tdlib library";

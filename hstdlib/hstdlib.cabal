@@ -25,6 +25,7 @@ library
                      , aeson >=1.2.4.0 && <1.4
                      , lens >= 4.16.1 && <4.17
                      , unordered-containers
+                     , text
   hs-source-dirs:      src
   ghc-options:         -Wall
                        -Wincomplete-uni-patterns
