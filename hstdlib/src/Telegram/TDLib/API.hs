@@ -74,13 +74,13 @@ data Parameters = Parameters
   { useTestDC :: Bool -- ^ If set to true, the Telegram test
                       -- environment will be used instead of the
                       -- production environment.
-  , databaseDirectory :: String -- ^ The path to the directory for
-                                -- the persistent database; if empty,
-                                -- the current working directory will
-                                -- be used.
-  , filesDirectory :: String -- ^ The path to the directory for
-                             -- storing files; if empty,
-                             -- database_directory will be used.
+  , databaseDirectory :: Text -- ^ The path to the directory for the
+                              -- persistent database; if empty, the
+                              -- current working directory will be
+                              -- used.
+  , filesDirectory :: Text -- ^ The path to the directory for storing
+                           -- files; if empty, database_directory will
+                           -- be used.
   , useFileDatabase :: Bool -- ^ If set to true, information about
                             -- downloaded and uploaded files will be
                             -- saved between application restarts.
@@ -98,19 +98,19 @@ data Parameters = Parameters
   , apiID :: Int32 -- ^ Application identifier for Telegram API
                    -- access, which can be obtained at
                    -- https://my.telegram.org.
-  , apiHash :: String -- ^ Application identifier hash for Telegram
-                      -- API access, which can be obtained at
-                      -- https://my.telegram.org.
-  , systemLanguageCode :: String -- ^ IETF language tag of the user's
-                                 -- operating system language; must
-                                 -- be non-empty.
-  , deviceModel :: String -- ^ Model of the device the application is
-                          -- being run on; must be non-empty.
-  , systemVersion :: String -- ^ Version of the operating system the
-                            -- application is being run on; must be
-                            -- non-empty.
-  , applicationVersion :: String -- ^ Application version; must be
-                                 -- non-empty.
+  , apiHash :: Text -- ^ Application identifier hash for Telegram API
+                    -- access, which can be obtained at
+                    -- https://my.telegram.org.
+  , systemLanguageCode :: Text -- ^ IETF language tag of the user's
+                               -- operating system language; must be
+                               -- non-empty.
+  , deviceModel :: Text -- ^ Model of the device the application is
+                        -- being run on; must be non-empty.
+  , systemVersion :: Text -- ^ Version of the operating system the
+                          -- application is being run on; must be
+                          -- non-empty.
+  , applicationVersion :: Text -- ^ Application version; must be
+                               -- non-empty.
   , enableStorageOptimizer :: Bool -- ^ If set to true, old files
                                    -- will automatically be deleted.
   , ignoreFileNames :: Bool -- ^ If set to true, original file names
@@ -202,7 +202,7 @@ recv client timeout = do
 
 data Function
   = SetTdlibParameters { parameters :: Parameters }
-  | CheckDatabaseEncryptionKey { encryptionKey :: String }
+  | CheckDatabaseEncryptionKey { encryptionKey :: Text }
   deriving (Eq, Show)
 
 deriveJSON AOpt.namedCtors ''Function
