@@ -125,9 +125,20 @@ deriveJSON AOpt.namedCtors ''Parameters
 data AuthorizationState
   = WaitTdlibParameters
   | WaitEncryptionKey { isEncrypted :: Bool }
+  | WaitPhoneNumber
   deriving (Eq, Show)
 
 deriveJSON (AOpt.prefixedCtors "authorizationState") ''AuthorizationState
+
+data ConnectionState
+  = Connecting
+  | ConnectingToProxy
+  | Ready
+  | Updating
+  | WaitingForNetwork
+  deriving (Eq, Show, Ord, Enum, Bounded, Read)
+
+deriveJSON (AOpt.prefixedCtors "connectionState") ''ConnectionState
 
 data OptionValue
   = OptionValueBoolean { _boolValue :: Bool }
@@ -149,6 +160,7 @@ data Update
   = AuthorizationState { authorizationState :: AuthorizationState }
   | Option { name :: Text
            , value :: OptionValue }
+  | ConnectionState { state :: ConnectionState }
   deriving (Eq, Show)
 
 deriveJSON (AOpt.prefixedCtors "update") ''Update
