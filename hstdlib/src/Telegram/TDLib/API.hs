@@ -21,11 +21,7 @@ module Telegram.TDLib.API
   , destroyClient
   ) where
 
-import Telegram.TDLib.API.AesonOptions
-  ( aesonOptions
-  , functionOptions
-  , objectAesonOptions
-  )
+import qualified Telegram.TDLib.API.AesonOptions as AOpt
 import Telegram.TDLib.Bindings
   ( TDLibClient
   , createClient
@@ -36,9 +32,8 @@ import Telegram.TDLib.Bindings
 
 import Data.Aeson
   ( FromJSON(parseJSON)
-  , ToJSON(toEncoding, toJSON)
+  , ToJSON(toJSON)
   , (.:?)
-  , (.=)
   , eitherDecodeStrict'
   , encode
   )
@@ -124,14 +119,14 @@ data Parameters = Parameters
                             -- name.
   } deriving (Eq, Show)
 
-deriveJSON (aesonOptions "tdlib") ''Parameters
+deriveJSON AOpt.namedCtors ''Parameters
 
 data AuthorizationState
   = WaitTdlibParameters
-  | WaitEncryptionKey { is_encrypted :: Bool }
+  | WaitEncryptionKey { isEncrypted :: Bool }
   deriving (Eq, Show)
 
-deriveJSON (aesonOptions "authorizationState") ''AuthorizationState
+deriveJSON (AOpt.prefixedCtors "authorizationState") ''AuthorizationState
 
 -- A better idea may be to go Object route and have separate type for
 -- each update alternative
@@ -139,14 +134,14 @@ data Update = AuthorizationState
   { authorizationState :: AuthorizationState
   } deriving (Eq, Show)
 
-deriveJSON (aesonOptions "update") ''Update
+deriveJSON (AOpt.prefixedCtors "update") ''Update
 makePrisms ''Update
 
 data Ok =
   Ok
   deriving (Eq, Show, Ord, Enum, Bounded, Read)
 
-deriveJSON functionOptions ''Ok
+deriveJSON AOpt.namedCtors ''Ok
 
 data Object
   = UpdateObj Update
@@ -154,7 +149,7 @@ data Object
   | OkObj Ok
   deriving (Eq, Show)
 
-deriveJSON objectAesonOptions ''Object
+deriveJSON AOpt.anonymousCtors ''Object
 makePrisms ''Object
 
 data ResponseDecodingError = ResponseDecodingError
@@ -178,10 +173,10 @@ recv client timeout = do
 
 data Function
   = SetTdlibParameters { parameters :: Parameters }
-  | CheckDatabaseEncryptionKey { encryption_key :: String }
+  | CheckDatabaseEncryptionKey { encryptionKey :: String }
   deriving (Eq, Show)
 
-deriveJSON functionOptions ''Function
+deriveJSON AOpt.namedCtors ''Function
 
 type Request = WithExtra Function
 

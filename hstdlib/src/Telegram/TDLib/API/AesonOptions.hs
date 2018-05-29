@@ -1,7 +1,7 @@
 module Telegram.TDLib.API.AesonOptions
-  ( aesonOptions
-  , objectAesonOptions
-  , functionOptions
+  ( namedCtors
+  , anonymousCtors
+  , prefixedCtors
   ) where
 
 import qualified Data.Aeson as A
@@ -18,14 +18,14 @@ baseOptions =
     }
 
 
-aesonOptions :: String -> A.Options
-aesonOptions prefix = baseOptions {A.constructorTagModifier = (prefix ++)}
+prefixedCtors :: String -> A.Options
+prefixedCtors prefix = baseOptions {A.constructorTagModifier = (prefix ++)}
 
-objectAesonOptions :: A.Options
-objectAesonOptions = A.defaultOptions {A.sumEncoding = A.UntaggedValue}
+anonymousCtors :: A.Options
+anonymousCtors = A.defaultOptions {A.sumEncoding = A.UntaggedValue}
 
-functionOptions :: A.Options
-functionOptions = baseOptions {A.constructorTagModifier = lowercaseFirst}
+namedCtors :: A.Options
+namedCtors = baseOptions {A.constructorTagModifier = lowercaseFirst}
   where
     lowercaseFirst (c:cs)
       | isUpper c = toLower c : cs
