@@ -10,5 +10,5 @@ mkDerivation {
   ];
   librarySystemDepends = [ tdjson ];
   description = "Haskell bindings for Telegram's tdlib library";
-  license = stdenv.lib.licenses.bsd3;
+  license = stdenv.lib.licenses.mit;
 }

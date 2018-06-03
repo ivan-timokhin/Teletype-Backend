@@ -5,7 +5,7 @@ name:                hstdlib
 version:             0.1.0.0
 synopsis:            Haskell bindings for Telegram's tdlib library
 -- description:
-license:             BSD3
+license:             MIT
 license-file:        LICENSE
 author:              Ivan Timokhin
 maintainer:          timokhin.iv@gmail.com
