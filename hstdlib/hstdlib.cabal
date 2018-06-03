@@ -26,6 +26,7 @@ library
                      , lens >= 4.16.1 && <4.17
                      , unordered-containers
                      , text
+                     , vector
   hs-source-dirs:      src
   ghc-options:         -Wall
                        -Wincomplete-uni-patterns
