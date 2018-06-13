@@ -6,22 +6,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Telegram.TDLib.API
-  ( TDLibClient
-  , withClient
-  , WithExtra(..)
-  , Parameters(..)
-  , AuthorizationState(..)
-  , Update(..)
-  , _AuthorizationState
-  , Object(..)
-  , _UpdateObj
-  , recv
-  , Function(..)
-  , send
-  , createClient
-  , destroyClient
-  ) where
+module Telegram.TDLib.API where
 
 import qualified Telegram.TDLib.API.AesonOptions as AOpt
 import Telegram.TDLib.Bindings
@@ -1226,14 +1211,313 @@ data ImportedContacts = ImportedContacts
 
 deriveJSON AOpt.namedCtors ''ImportedContacts
 
-data Update
-  = AuthorizationState { authorizationState :: AuthorizationState }
-  | Option { name :: Text
-           , value :: OptionValue }
-  | ConnectionState { state :: ConnectionState }
+data Users = Users
+  { totalCount :: Int32
+  , userIds :: Vector Int32
+  } deriving (Eq, Show)
+
+deriveJSON AOpt.namedCtors ''Users
+
+data Proxy
+  = ProxyEmpty
+  | ProxySocks5 { server :: Text
+                , port :: Int32
+                , username :: Text
+                , password :: Text }
   deriving (Eq, Show)
 
-deriveJSON (AOpt.prefixedCtors "update") ''Update
+deriveJSON AOpt.namedCtors ''Proxy
+
+data NotificationSettingsScope
+  = NotificationSettingsScopeAllChats
+  | NotificationSettingsScopeBasicGroupChats
+  | NotificaitonSettingsScopeChat { chatId :: LongNumber Int64 }
+  | NotificationSettingsScopePrivateChats
+  deriving (Eq, Show)
+
+deriveJSON AOpt.namedCtors ''NotificationSettingsScope
+
+data SecretChatState
+  = SecretChatStateClosed
+  | SecretChatStatePending
+  | SecretChatStateReady
+  deriving (Eq, Show, Ord, Bounded, Enum)
+
+deriveJSON AOpt.namedCtors ''SecretChatState
+
+data SecretChat = SecretChat
+  { id :: Int32
+  , userId :: Int32
+  , state :: SecretChatState
+  , isOutbound :: Bool
+  , ttl :: Int32
+  , keyHash :: Text
+  , layer :: Int32
+  } deriving (Eq, Show)
+
+deriveJSON AOpt.namedCtors ''SecretChat
+
+data Supergroup = Supergroup
+  { id :: Int32
+  , username :: Text
+  , date :: Int32
+  , status :: ChatMemberStatus
+  , memberCount :: Int32
+  , anyoneCanInvite :: Bool
+  , signMessages :: Bool
+  , isChannel :: Bool
+  , isVerified :: Bool
+  , restrictionReason :: Text
+  } deriving (Eq, Show)
+
+deriveJSON AOpt.namedCtors ''Supergroup
+
+data SupergroupFullInfo = SupergroupFullInfo
+  { description :: Text
+  , memberCount :: Int32
+  , administratorCount :: Int32
+  , restrictedCount :: Int32
+  , bannedCount :: Int32
+  , canGetMembers :: Bool
+  , canSetUsername :: Bool
+  , canSetStickerSet :: Bool
+  , isAllHistoryAvailable :: Bool
+  , stickerSetId :: LongNumber Int64
+  , inviteLink :: Text
+  , pinnedMessageId :: LongNumber Int64
+  , upgradedFromBasicGroupId :: Int32
+  , upgradedFromMaxMessageId :: LongNumber Int64
+  } deriving (Eq, Show)
+
+deriveJSON AOpt.namedCtors ''SupergroupFullInfo
+
+data StickerSetInfo = StickerSetInfo
+  { id :: LongNumber Int64
+  , title :: Text
+  , name :: Text
+  , isInstalled :: Bool
+  , isArchived :: Bool
+  , isOfficial :: Bool
+  , isMasks :: Bool
+  , isViewed :: Bool
+  , size :: Int32
+  , covers :: Vector Sticker
+  } deriving (Eq, Show)
+
+deriveJSON AOpt.namedCtors ''StickerSetInfo
+
+data StickerSets = StickerSets
+  { totalCount :: Int32
+  , sets :: Vector StickerSetInfo
+  } deriving (Eq, Show)
+
+deriveJSON AOpt.namedCtors ''StickerSets
+
+data UserStatus
+  = UserStatusEmpty
+  | UserStatusLastMonth
+  | UserStatusLastWeek
+  | UserStatusOffline { wasOnline :: Int32 }
+  | UserStatusOnline { expires :: Int32 }
+  | UserStatusRecently
+  deriving (Eq, Show)
+
+deriveJSON AOpt.namedCtors ''UserStatus
+
+data ProfilePhoto = ProfilePhoto
+  { id :: LongNumber Int64
+  , small :: File
+  , big :: File
+  } deriving (Eq, Show)
+
+deriveJSON AOpt.namedCtors ''ProfilePhoto
+
+data LinkState
+  = LinkStateIsContact
+  | LinkStateKnowsPhoneNumber
+  | LinkStateNone
+  deriving (Eq, Show, Ord, Enum, Bounded)
+
+deriveJSON AOpt.namedCtors ''LinkState
+
+data UserType
+  = UserTypeBot { canJoinGroups :: Bool
+                , canReadAllGroupMessages :: Bool
+                , isInline :: Bool
+                , inlineQueryPlaceholder :: Text
+                , needLocation :: Bool }
+  | UserTypeDeleted
+  | UserTypeRegular
+  | UserTypeUnknown
+  deriving (Eq, Show)
+
+deriveJSON AOpt.namedCtors ''UserType
+
+data User = User
+  { id :: Int32
+  , firstName :: Text
+  , lastName :: Text
+  , username :: Text
+  , phoneNumber :: Text
+  , status :: UserStatus
+  , profilePhoto :: ProfilePhoto
+  , outgoingLink :: LinkState
+  , incomingLink :: LinkState
+  , isVerified :: Bool
+  , restrictionReason :: Text
+  , haveAccess :: Bool
+  , _type :: UserType
+  , languageCode :: Text
+  } deriving (Eq, Show)
+
+deriveJSON AOpt.namedCtors ''User
+
+data UserFullInfo = UserFullInfo
+  { isBlocked :: Bool
+  , canBeCalled :: Bool
+  , hasPrivateCalls :: Bool
+  , bio :: Text
+  , shareText :: Text
+  , groupInCommonCount :: Int32
+  , botInfo :: Maybe BotInfo
+  } deriving (Eq, Show)
+
+deriveJSON AOpt.namedCtors ''UserFullInfo
+
+data Update
+  = UpdateAuthorizationState { authorizationState :: AuthorizationState }
+  | UpdateOption { name :: Text
+                 , value :: OptionValue }
+  | UpdateConnectionState { state :: ConnectionState }
+  | UpdateBasicGroup { basicGroup :: BasicGroup }
+  | UpdateBasicGroupFullInfo { basicGroupId :: Int32
+                             , basicGroupFullInfo :: BasicGroupFullInfo }
+  | UpdateCall { call :: Call }
+  | UpdateChatDraftMessage { chatId :: LongNumber Int64
+                           , draftMessage :: Maybe DraftMessage
+                           , order :: LongNumber Int64 }
+  | UpdateChatIsPinned { chatId :: LongNumber Int64
+                       , isPinned :: Bool
+                       , order :: LongNumber Int64 }
+  | UpdateChatLastMessage { chatId :: LongNumber Int64
+                          , lastMessage :: Maybe Message
+                          , order :: LongNumber Int64 }
+  | UpdateChatOrder { chatId :: LongNumber Int64
+                    , order :: LongNumber Int64 }
+  | UpdateChatPhoto { chatId :: LongNumber Int64
+                    , photo :: ChatPhoto }
+  | UpdateChatReadInbox { chatId :: LongNumber Int64
+                        , lastReadInboxMessageId :: LongNumber Int64
+                        , unreadCount :: Int32 }
+  | UpdateChatReadOutbox { chatId :: LongNumber Int64
+                         , lastReadOutboxMessageId :: LongNumber Int64 }
+  | UpdateChatReplyMarkup { chatId :: LongNumber Int64
+                          , replyMarkupMessageId :: LongNumber Int64 }
+  | UpdateChatTitle { chatId :: LongNumber Int64
+                    , title :: Text }
+  | UpdateChatUnreadMentionCount { chatId :: LongNumber Int64
+                                 , unreadMentionCount :: Int32 }
+  | UpdateDeleteMessages { chatId :: LongNumber Int64
+                         , messageIds :: Vector (LongNumber Int64)
+                         , isPermanent :: Bool
+                         , fromCache :: Bool }
+  | UpdateFavoriteStickers { stickerIds :: Vector Int32 }
+  | UpdateFile { file :: File }
+  | UpdateFileGenerationStart { generationId :: Int64
+                              , originalPath :: Text
+                              , destinationPath :: Text
+                              , conversion :: Text }
+  | UpdateFileGenerationStop { generationId :: Int64 }
+  | UpdateInstalledStickerSets { isMasks :: Bool
+                               , stickerSetIds :: Vector (LongNumber Int64) }
+  | UpdateMessageContent { chatId :: LongNumber Int64
+                         , messageId :: LongNumber Int64
+                         , newContent :: MessageContent }
+  | UpdateMessageContentOpened { chatId :: LongNumber Int64
+                               , messageId :: LongNumber Int64 }
+  | UpdateMessageEdited { chatId :: LongNumber Int64
+                        , messageId :: LongNumber Int64
+                        , editDate :: Int32
+                        , replyMarkup :: Maybe ReplyMarkup }
+  | UpdateMessageMentionRead { chatId :: LongNumber Int64
+                             , messageId :: LongNumber Int64
+                             , unreadMentionCount :: Int32 }
+  | UpdateMessageSendAcknowledged { chatId :: LongNumber Int64
+                                  , messageId :: LongNumber Int64 }
+  | UpdateMessageSendFailed { message :: Message
+                            , oldMessageId :: LongNumber Int64
+                            , errorCode :: Int32
+                            , errorMessage :: Text }
+  | UpdateMessageSendSucceeded { message :: Message
+                               , oldMessageId :: LongNumber Int64 }
+  | UpdateMessageViews { chatId :: LongNumber Int64
+                       , messageId :: LongNumber Int64
+                       , views :: Int32 }
+  | UpdateNewCallbackQuery { id :: LongNumber Int64
+                           , senderUserId :: Int32
+                           , chatId :: LongNumber Int64
+                           , messageId :: LongNumber Int64
+                           , chatInstance :: LongNumber Int64
+                           , payload :: CallbackQueryPayload }
+  | UpdateNewChat { chat :: Chat }
+  | UpdateNewChosenInlineResult { senderUserId :: Int32
+                                , userLocation :: Maybe Location
+                                , query :: Text
+                                , resultId :: Text
+                                , _inlineMessageId :: Maybe Text }
+  | UpdateNewCustomEvent { event :: Text }
+  | UpdateNewCustomQuery { id :: LongNumber Int64
+                         , _data :: Text
+                         , timeout :: Int32 }
+  | UpdateNewInlineCallbackQuery { id :: LongNumber Int64
+                                 , senderUserId :: Int32
+                                 , inlineMessageId :: Text
+                                 , chatInstance :: LongNumber Int64
+                                 , payload :: CallbackQueryPayload }
+  | UpdateNewInlineQuery { id :: LongNumber Int64
+                         , senderUserId :: Int32
+                         , userLocation :: Maybe Location
+                         , query :: Text
+                         , offset :: Text }
+  | UpdateNewMessage { message :: Message
+                     , disableNotification :: Bool
+                     , containsMention :: Bool }
+  | UpdateNewPreCheckoutQuery { id :: LongNumber Int64
+                              , senderUserId :: Int32
+                              , currency :: Text
+                              , totalAmount :: LongNumber Int64
+                              , invoicePayload :: Text
+                              , shippingOptionId :: Text
+                              , orderInfo :: Maybe OrderInfo }
+  | UpdateNewShippingQuery { id :: LongNumber Int64
+                           , senderUserId :: Int32
+                           , invoicePayload :: Text
+                           , shippingAddress :: ShippingAddress }
+  | UpdateNotificationSettings { scope :: NotificationSettingsScope
+                               , notificationSettings :: NotificationSettings }
+  | UpdateRecentStickers { isAttached :: Bool
+                         , stickerIds :: Vector Int32 }
+  | UpdateSavedAnimations { animationsIds :: Vector Int32 }
+  | UpdateSecretChat { secretChat :: SecretChat }
+  | UpdateServiceNotification { _type :: Text
+                              , content :: MessageContent }
+  | UpdateSupergroup { supergroup :: Supergroup }
+  | UpdateSupergroupFullInfo { supergroupId :: Int32
+                             , supergroupFullInfo :: SupergroupFullInfo }
+  | UpdateTrendingStickerSets { stickerSets :: StickerSets }
+  | UpdateUnreadMessageCount { unreadCount :: Int32
+                             , unreadUnmutedCount :: Int32 }
+  | UpdateUser { user :: User }
+  | UpdateUserChatAction { chatId :: LongNumber Int64
+                         , userId :: Int32
+                         , action :: ChatAction }
+  | UpdateUserFullInfo { userId :: Int32
+                       , userFullInfo :: UserFullInfo }
+  | UpdateUserStatus { userId :: Int32
+                     , status :: UserStatus }
+  deriving (Eq, Show)
+
+deriveJSON AOpt.namedCtors ''Update
 makePrisms ''Update
 
 data Object
@@ -1328,6 +1612,8 @@ data Object
   | GameHighScoresObj GameHighScores
   | HashtagsObj Hashtags
   | ImportedContactsObj ImportedContacts
+  | UsersObj Users
+  | ProxyObj Proxy
   deriving (Eq, Show)
 
 deriveJSON AOpt.anonymousCtors ''Object
@@ -1358,6 +1644,12 @@ data Function
                                  , allowFlashCall :: Bool
                                  , isCurrentPhoneNumber :: Bool }
   | CheckDatabaseEncryptionKey { encryptionKey :: Text }
+  | CheckAuthenticationCode { code :: Text
+                            , firstName :: Maybe Text
+                            , lastName :: Maybe Text }
+  | SearchContacts { query :: Text
+                   , limit :: Int32 }
+  | SetProxy { proxy :: Proxy }
   deriving (Eq, Show)
 
 deriveJSON AOpt.namedCtors ''Function
