@@ -7,11 +7,14 @@ module Telegram.TDLib.Bindings
   , sendJSON
   , recvJSON
   , executeJSON
+  , setLogFilePath
+  , setLogMaxFileSize
+  , setLogVerbosityLevel
   ) where
 
 import Data.ByteString (ByteString, packCString, useAsCString)
 import Foreign.C.String (CString)
-import Foreign.C.Types (CDouble(CDouble))
+import Foreign.C.Types (CDouble(CDouble), CInt(CInt), CLLong(CLLong))
 import Foreign.Ptr (Ptr, nullPtr)
 
 foreign import ccall "td_json_client_create" c_td_json_client_create
@@ -28,6 +31,15 @@ foreign import ccall "td_json_client_execute" c_td_json_client_execute
 
 foreign import ccall "td_json_client_destroy" c_td_json_client_destroy
   :: Ptr () -> IO ()
+
+foreign import ccall "td_set_log_file_path" c_td_set_log_file_path
+  :: CString -> IO CInt
+
+foreign import ccall "td_set_log_max_file_size" c_td_set_log_max_file_size
+  :: CLLong -> IO ()
+
+foreign import ccall "td_set_log_verbosity_level" c_td_set_log_verbosity_level
+  :: CInt -> IO ()
 
 -- | An instance of a TDLib client
 newtype TDLibClient =
@@ -87,3 +99,13 @@ executeJSON (TDLibClient client) request = do
 -- After this is called the client instance shouldn't be used anymore.
 destroyClient :: TDLibClient -> IO ()
 destroyClient (TDLibClient client) = c_td_json_client_destroy client
+
+setLogFilePath :: ByteString -> IO Int
+setLogFilePath filename =
+  fromIntegral <$> useAsCString filename c_td_set_log_file_path
+
+setLogMaxFileSize :: Integer -> IO ()
+setLogMaxFileSize = c_td_set_log_max_file_size . fromInteger
+
+setLogVerbosityLevel :: Int -> IO ()
+setLogVerbosityLevel = c_td_set_log_verbosity_level . fromIntegral
