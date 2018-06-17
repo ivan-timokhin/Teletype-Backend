@@ -264,7 +264,7 @@ deriveJSON AOpt.namedCtors ''AuthenticationCodeType
 data AuthenticationCodeInfo = AuthenticationCodeInfo
   { phoneNumber :: Text
   , _type :: AuthenticationCodeType
-  , nextType :: AuthenticationCodeType
+  , nextType :: Maybe AuthenticationCodeType
   , timeout :: Int32
   } deriving (Eq, Show)
 
@@ -1360,7 +1360,7 @@ data User = User
   , username :: Text
   , phoneNumber :: Text
   , status :: UserStatus
-  , profilePhoto :: ProfilePhoto
+  , profilePhoto :: Maybe ProfilePhoto
   , outgoingLink :: LinkState
   , incomingLink :: LinkState
   , isVerified :: Bool
