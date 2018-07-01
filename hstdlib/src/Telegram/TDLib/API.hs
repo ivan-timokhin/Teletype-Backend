@@ -5,6 +5,7 @@
 {-# LANGUAGE DuplicateRecordFields #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Telegram.TDLib.API where
 
@@ -37,6 +38,7 @@ import qualified Data.HashMap.Strict as HM
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Vector (Vector)
+import GHC.Generics (Generic)
 
 withClient :: (TDLibClient -> IO a) -> IO a
 withClient = bracket createClient destroyClient
@@ -286,6 +288,7 @@ data AuthorizationState
   deriving (Eq, Show)
 
 deriveJSON (AOpt.prefixedCtors "authorizationState") ''AuthorizationState
+makePrisms ''AuthorizationState
 
 data ChatMemberStatus
   = Administrator { canBeEdited :: Bool
@@ -1368,7 +1371,7 @@ data User = User
   , haveAccess :: Bool
   , _type :: UserType
   , languageCode :: Text
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic)
 
 deriveJSON AOpt.namedCtors ''User
 

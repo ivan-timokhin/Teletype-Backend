@@ -1,7 +1,6 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DuplicateRecordFields #-}
 
 module Data.Telegram.User
   ( Status(..)
@@ -54,7 +53,7 @@ data Access
   deriving (Eq, Show, Enum, Bounded, Ord, Generic, Data)
 
 data RestrictionReason = RestrictionReason
-  { kind :: Text
+  { reason :: Text
   , platforms :: Vector Text
   , description :: Text
   } deriving (Eq, Show, Generic, Data)

@@ -18,17 +18,26 @@ cabal-version:       >=1.10
 library
   exposed-modules:     Telegram.TDLib.Bindings
                      , Telegram.TDLib.API
+                     , Telegram.Reactor
                      , Data.Telegram.User
+                     , Data.Telegram.Authorization
+                     , Data.Telegram.Proxy
+                     , Data.Telegram.Parameters
   other-modules:       Telegram.TDLib.API.AesonOptions
   -- other-extensions:
   build-depends:       base >=4.11 && <4.12
                      , bytestring >=0.10.8.2 && <0.11
                      , aeson >=1.2.4.0 && <1.4
                      , lens >= 4.16.1 && <4.17
+                     , generic-lens
                      , unordered-containers
                      , text
                      , vector
                      , time
+                     , stm
+                     , unordered-containers
+                     , containers
+                     , async
   hs-source-dirs:      src
   ghc-options:         -Wall
                        -Wincomplete-uni-patterns
