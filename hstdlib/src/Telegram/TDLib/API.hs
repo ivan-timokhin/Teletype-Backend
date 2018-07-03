@@ -163,13 +163,12 @@ deriveJSON
      })
   ''OptionValue
 
--- A better idea may be to go Object route and have separate type for
--- each update alternative
 data Ok =
   Ok
   deriving (Eq, Show, Ord, Enum, Bounded, Read)
 
 deriveJSON AOpt.namedCtors ''Ok
+makePrisms ''Ok
 
 data Error = Error
   { code :: Int32
@@ -1217,7 +1216,7 @@ deriveJSON AOpt.namedCtors ''ImportedContacts
 data Users = Users
   { totalCount :: Int32
   , userIds :: Vector Int32
-  } deriving (Eq, Show)
+  } deriving (Eq, Show, Generic)
 
 deriveJSON AOpt.namedCtors ''Users
 
@@ -1660,4 +1659,4 @@ deriveJSON AOpt.namedCtors ''Function
 type Request = WithExtra Function
 
 send :: ToJSON a => TDLibClient -> Request a -> IO ()
-send client request = sendJSON client (toStrict $ encode request)
+send client = sendJSON client . toStrict . encode
