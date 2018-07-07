@@ -148,22 +148,22 @@ handleUpdates reactor incoming = loop
       atomically $
         writeTVar (authorizationState . state $ reactor) (Just translated)
       case translated of
-        Authorization.WaitParameters -> do
+        Authorization.WaitParameters ->
           TDLib.send
             (client reactor)
             (TDLib.WithExtra
                (TDLib.SetTdlibParameters (tdlibParams (params reactor)))
                (Nothing :: Maybe ()))
-          for_ (tdlibProxy $ params reactor) $ \proxy ->
-            TDLib.send (client reactor) $
-            TDLib.WithExtra (TDLib.SetProxy proxy) (Nothing :: Maybe ())
-        Authorization.WaitEncryptionKey _encState ->
+        Authorization.WaitEncryptionKey _encState -> do
           TDLib.send
             (client reactor)
             (TDLib.WithExtra
                (TDLib.CheckDatabaseEncryptionKey
                   (P.encryptionKey . P.storage . params $ reactor))
                (Nothing :: Maybe ()))
+          for_ (tdlibProxy $ params reactor) $ \proxy ->
+            TDLib.send (client reactor) $
+            TDLib.WithExtra (TDLib.SetProxy proxy) (Nothing :: Maybe ())
         Authorization.WaitPhoneNumber ->
           TDLib.send
             (client reactor)
