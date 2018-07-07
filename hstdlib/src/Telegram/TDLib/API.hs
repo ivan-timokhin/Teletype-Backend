@@ -39,6 +39,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Vector (Vector)
 import GHC.Generics (Generic)
+import Data.Semigroup((<>))
 
 withClient :: (TDLibClient -> IO a) -> IO a
 withClient = bracket createClient destroyClient
@@ -75,12 +76,15 @@ newtype LongNumber a = LongNumber
              , Bounded
              )
 
-instance Read a => FromJSON (LongNumber a) where
+instance (FromJSON a, Read a) => FromJSON (LongNumber a) where
   parseJSON =
-    A.withText "LongNumber" $ \txt ->
-      case reads (T.unpack txt) of
-        [(v, "")] -> pure (LongNumber v)
-        _ -> fail $ "Could not parse " ++ show txt ++ " as a number."
+    (fmap LongNumber . parseJSON) <>
+    A.withText
+      "LongNumber"
+      (\txt ->
+         case reads (T.unpack txt) of
+           [(v, "")] -> pure (LongNumber v)
+           _ -> fail $ "Could not parse " ++ show txt ++ " as a number.")
 
 instance Show a => ToJSON (LongNumber a) where
   toJSON = toJSON . show . getLongNumber
