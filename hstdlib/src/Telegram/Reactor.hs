@@ -24,13 +24,20 @@ import Control.Concurrent.STM.TVar
   , readTVar
   , writeTVar
   )
-import Control.Exception (Exception, finally, throwIO, uninterruptibleMask_, bracket)
-import Control.Lens (to, _Just)
+import Control.Exception
+  ( Exception
+  , bracket
+  , finally
+  , throwIO
+  , uninterruptibleMask_
+  )
+import Control.Lens (_Just, to)
 import Control.Lens.At (at, ix)
 import Control.Lens.Fold (has)
 import Control.Lens.Getter (Getting)
 import Control.Lens.Operators ((<<.~), (?~), (^.), (^?))
 import Control.Monad (unless)
+import Control.Monad.IO.Class (MonadIO(liftIO))
 import Data.Foldable (for_)
 import Data.Function ((&))
 import Data.Generics.Product.Fields (field)
@@ -65,9 +72,9 @@ data State = State
   }
 
 -- TODO: handle errors during startup
-launchReactor :: Parameters -> IO Reactor
+launchReactor :: MonadIO m => Parameters -> m Reactor
 launchReactor parameters =
-  uninterruptibleMask_ $
+  liftIO $ uninterruptibleMask_ $
   mdo updatesChan <- newChan
       subs <- newIORef HM.empty
       subsId <- newIORef 0
@@ -96,12 +103,11 @@ launchReactor parameters =
       astate <- newTVarIO Nothing
       pure $ State {users = usrs, authorizationState = astate}
 
-killReactor :: Reactor -> IO ()
-killReactor =
-  cancel . eventLoopThread
+killReactor :: MonadIO m => Reactor -> m ()
+killReactor = liftIO . cancel . eventLoopThread
 
-withReactor :: Parameters -> (Reactor -> IO a) -> IO a
-withReactor p = bracket (launchReactor p) killReactor
+withReactor :: MonadIO m => Parameters -> (Reactor -> IO a) -> m a
+withReactor p = liftIO . bracket (launchReactor p) killReactor
 
 eventLoop :: Reactor -> Double -> Chan TDLib.Update -> (IO () -> IO ()) -> IO ()
 eventLoop reactor timeout updatesChan unmask =
@@ -118,8 +124,8 @@ eventLoop reactor timeout updatesChan unmask =
           for_ (obj ^? TDLib._UpdateObj) (writeChan updatesChan)
           unless
             (has
-               (TDLib._UpdateObj .
-                TDLib._UpdateAuthorizationState . TDLib._Closed)
+               (TDLib._UpdateObj . TDLib._UpdateAuthorizationState .
+                TDLib._Closed)
                obj)
             loop
         Nothing -> pure ()
@@ -231,12 +237,14 @@ handleUpdates reactor incoming = loop
                   else Just (user ^. field @"languageCode")
             }
 
-waitForAuthState :: Reactor -> Getting (First a) Authorization.State a -> IO a
-waitForAuthState reactor prism = atomically $ do
-  astate <- readTVar . authorizationState . state $ reactor
-  case astate ^? _Just . prism of
-    Just a -> pure a
-    Nothing -> retry
+waitForAuthState ::
+     MonadIO m => Reactor -> Getting (First a) Authorization.State a -> m a
+waitForAuthState reactor prism =
+  liftIO $ atomically $ do
+    astate <- readTVar . authorizationState . state $ reactor
+    case astate ^? _Just . prism of
+      Just a -> pure a
+      Nothing -> retry
 
 data UnexpectedResponse = UnexpectedResponse
   { request :: TDLib.Function
@@ -253,61 +261,71 @@ data TDLibError = TDLibError
 instance Exception TDLibError
 
 makeRequest ::
-     Reactor
+     MonadIO m
+  => Reactor
   -> Getting (First a) TDLib.Object a
   -> TDLib.Function
-  -> IO (Either TDLibError a)
-makeRequest reactor getter function = do
-  subId <- atomicModifyIORef' (nextSubscriptionId reactor) (succ &&& id)
-  responseHole <- newEmptyMVar
-  atomicModifyIORef'
-    (subscriptions reactor)
-    (\subs -> (HM.insert subId responseHole subs, ()))
-  TDLib.send
-    (client reactor)
-    (TDLib.WithExtra function (Just $ TDLib.LongNumber subId))
-  resp <- takeMVar responseHole
-  case resp of
-    TDLib.ErrorObj (TDLib.Error code text) ->
-      pure $ Left (TDLibError (fromIntegral code) text)
-    _ ->
-      case resp ^? getter of
-        Nothing -> throwIO $ UnexpectedResponse function resp
-        Just result -> pure $ Right result
+  -> m (Either TDLibError a)
+makeRequest reactor getter function =
+  liftIO $ do
+    subId <- atomicModifyIORef' (nextSubscriptionId reactor) (succ &&& id)
+    responseHole <- newEmptyMVar
+    atomicModifyIORef'
+      (subscriptions reactor)
+      (\subs -> (HM.insert subId responseHole subs, ()))
+    TDLib.send
+      (client reactor)
+      (TDLib.WithExtra function (Just $ TDLib.LongNumber subId))
+    resp <- takeMVar responseHole
+    case resp of
+      TDLib.ErrorObj (TDLib.Error code text) ->
+        pure $ Left (TDLibError (fromIntegral code) text)
+      _ ->
+        case resp ^? getter of
+          Nothing -> throwIO $ UnexpectedResponse function resp
+          Just result -> pure $ Right result
 
-unwrap :: Exception e => Either e a -> IO a
-unwrap = either throwIO pure
+unwrap :: (Exception e, MonadIO m) => Either e a -> m a
+unwrap = liftIO . either throwIO pure
 
 newtype UserId = UserId
   { getUserId :: Int32
   } deriving (Eq, Show)
 
 searchContacts ::
-     Reactor -> Text -> Int -> IO (Either TDLibError (Vector UserId))
+     MonadIO m
+  => Reactor
+  -> Text
+  -> Int
+  -> m (Either TDLibError (Vector UserId))
 searchContacts reactor query limit =
   makeRequest
     reactor
     (TDLib._UsersObj . field @"userIds" . to (fmap UserId))
     (TDLib.SearchContacts query (fromIntegral limit))
 
-searchContacts' :: Reactor -> Text -> Int -> IO (Vector UserId)
+searchContacts' :: MonadIO m => Reactor -> Text -> Int -> m (Vector UserId)
 searchContacts' reactor query limit =
   unwrap =<< searchContacts reactor query limit
 
 checkAuthCode ::
-     Reactor -> Maybe (Text, Text) -> Text -> IO (Either TDLibError ())
+     MonadIO m
+  => Reactor
+  -> Maybe (Text, Text)
+  -> Text
+  -> m (Either TDLibError ())
 checkAuthCode reactor name code =
   makeRequest
     reactor
     (TDLib._OkObj . TDLib._Ok)
     (TDLib.CheckAuthenticationCode code (fmap fst name) (fmap snd name))
 
-checkAuthCode' :: Reactor -> Maybe (Text, Text) -> Text -> IO ()
+checkAuthCode' :: MonadIO m => Reactor -> Maybe (Text, Text) -> Text -> m ()
 checkAuthCode' reactor name code = unwrap =<< checkAuthCode reactor name code
 
-lookupUsers :: Traversable t => Reactor -> t UserId -> IO (t User)
+lookupUsers :: (MonadIO m, Traversable t) => Reactor -> t UserId -> m (t User)
 lookupUsers reactor userIds =
-  atomically $ do
+  liftIO $ atomically $ do
     userMap <- readTVar (users $ state reactor)
     for userIds $ \uid ->
       case IM.lookup (fromIntegral $ getUserId uid) userMap of
