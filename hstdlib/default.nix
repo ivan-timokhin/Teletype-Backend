@@ -1,2 +1,2 @@
-{ pkgs ? import <nixpkgs-unstable> {}, tdlib }:
-pkgs.haskell.packages.ghc843.callPackage ./package.nix { tdjson = tdlib; }
+{ pkgs ? import <nixpkgs-unstable> {}, tdlib, compiler }:
+pkgs.haskell.packages.${compiler}.callPackage ./package.nix { tdjson = tdlib; }

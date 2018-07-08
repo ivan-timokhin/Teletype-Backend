@@ -1,6 +1,8 @@
-{ nixpkgs ? import <nixpkgs-unstable> {} } :
+{ nixpkgs ? import ./nixpkgs.nix } :
 
-with nixpkgs; rec {
+let
+  compiler = "ghc822";
+in with nixpkgs; rec {
   tdlib = stdenv.mkDerivation {
     name = "tdlib-1.2.0";
     src = fetchFromGitHub {
@@ -24,5 +26,5 @@ with nixpkgs; rec {
     };
   };
 
-  hstdlib = import ./hstdlib { pkgs = nixpkgs; inherit tdlib; };
+  hstdlib = import ./hstdlib { pkgs = nixpkgs; inherit tdlib; inherit compiler; };
 }
