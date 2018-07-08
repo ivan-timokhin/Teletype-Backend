@@ -27,4 +27,6 @@ in with nixpkgs; rec {
   };
 
   hstdlib = import ./hstdlib { pkgs = nixpkgs; inherit tdlib; inherit compiler; };
+
+  teletype-server = import ./teletype-server { pkgs = nixpkgs; inherit hstdlib; inherit compiler; };
 }
