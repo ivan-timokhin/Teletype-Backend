@@ -31,9 +31,9 @@ import Control.Exception
   , throwIO
   , uninterruptibleMask_
   )
-import Control.Lens (_Just, to)
+import Control.Lens (to)
 import Control.Lens.At (at, ix)
-import Control.Lens.Fold (has)
+import Control.Lens.Fold (has, preview)
 import Control.Lens.Getter (Getting)
 import Control.Lens.Operators ((<<.~), (?~), (^.), (^?))
 import Control.Monad (unless)
@@ -237,14 +237,17 @@ handleUpdates reactor incoming = loop
                   else Just (user ^. field @"languageCode")
             }
 
-waitForAuthState ::
-     MonadIO m => Reactor -> Getting (First a) Authorization.State a -> m a
-waitForAuthState reactor prism =
+waitForPassingAuthState :: MonadIO m => Reactor -> (Authorization.State -> Maybe a) -> m a
+waitForPassingAuthState reactor getter =
   liftIO $ atomically $ do
     astate <- readTVar . authorizationState . state $ reactor
-    case astate ^? _Just . prism of
+    case astate >>= getter of
       Just a -> pure a
       Nothing -> retry
+
+waitForAuthState ::
+     MonadIO m => Reactor -> Getting (First a) Authorization.State a -> m a
+waitForAuthState reactor prism = waitForPassingAuthState reactor (preview prism)
 
 data UnexpectedResponse = UnexpectedResponse
   { request :: TDLib.Function
