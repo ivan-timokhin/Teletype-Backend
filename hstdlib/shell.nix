@@ -1,2 +1,2 @@
-{ nixpkgs ? import <nixpkgs-unstable> {} }:
+{ nixpkgs ? import ../nixpkgs.nix }:
 (import ../default.nix { inherit nixpkgs; }).hstdlib.env
