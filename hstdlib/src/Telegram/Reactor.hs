@@ -16,6 +16,7 @@ import Control.Arrow ((&&&))
 import Control.Concurrent.Async (Async, asyncWithUnmask, cancel)
 import Control.Concurrent.Chan (Chan, newChan, readChan, writeChan)
 import Control.Concurrent.MVar (MVar, newEmptyMVar, putMVar, takeMVar)
+import Control.Concurrent (threadDelay)
 import Control.Concurrent.STM (atomically, retry)
 import Control.Concurrent.STM.TVar
   ( TVar
@@ -128,7 +129,9 @@ eventLoop reactor timeout updatesChan unmask =
                 TDLib._Closed)
                obj)
             loop
-        Nothing -> pure ()
+        Nothing -> do
+          threadDelay 1
+          loop
     handleResponse :: TDLib.Object -> TDLib.LongNumber Word64 -> IO ()
     handleResponse obj (TDLib.LongNumber exchangeId) = do
       mMailbox <-

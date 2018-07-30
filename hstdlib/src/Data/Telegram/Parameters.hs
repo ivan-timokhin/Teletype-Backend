@@ -1,36 +1,41 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE RecordWildCards #-}
+
 module Data.Telegram.Parameters where
 
 import Data.Telegram.Proxy (Socks5Proxy)
 import qualified Data.Telegram.Proxy as Proxy
 import qualified Telegram.TDLib.API as TDLib
 
+import Data.Data (Data)
 import Data.Text (Text)
 import qualified Data.Text as T
+import GHC.Generics (Generic)
 import System.IO (FilePath)
 
 data Environment
   = Test
   | Production
-  deriving (Eq, Ord, Show, Bounded, Enum)
+  deriving (Eq, Ord, Show, Bounded, Enum, Generic, Data)
 
 data API = API
   { apiId :: Int
   , apiHash :: Text
-  }
+  } deriving (Eq, Show, Generic, Data)
 
 data SystemInfo = SystemInfo
   { languageCode :: Text
   , device :: Text
   , systemVersion :: Text
-  }
+  } deriving (Eq, Show, Generic, Data)
 
 data Storage = Storage
   { dbDir :: FilePath
   , filesDir :: FilePath
   , useFileDB, useChatInfoDB, useMessageDB, enableOptimizer, ignoreFileNames :: Bool
   , encryptionKey :: Text
-  }
+  } deriving (Eq, Show, Generic, Data)
 
 data Parameters = Parameters
   { phoneNumber :: Text
@@ -42,7 +47,7 @@ data Parameters = Parameters
   , appVersion :: Text
   , proxy :: Maybe Socks5Proxy
   , receptionTimeout :: Double
-  }
+  } deriving (Eq, Show, Generic, Data)
 
 tdlibParams :: Parameters -> TDLib.Parameters
 tdlibParams Parameters {..} =

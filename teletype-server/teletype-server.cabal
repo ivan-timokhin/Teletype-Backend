@@ -25,5 +25,16 @@ executable teletype-server
                      , servant
                      , servant-server
                      , configurator
+                     , optparse-applicative
+                     , text
+                     , transformers
+                     , vector
+                     , async
   hs-source-dirs:      src
+  ghc-options:         -Wall
+                       -Wincomplete-uni-patterns
+                       -Wincomplete-record-updates
+                       -Wmissing-import-lists
+                       -Widentities
+                       -O2
   default-language:    Haskell2010

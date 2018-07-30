@@ -1,5 +1,6 @@
-{ mkDerivation, base, configurator, hstdlib, servant
-, servant-server, stdenv, warp
+{ mkDerivation, async, base, configurator, hstdlib
+, optparse-applicative, servant, servant-server, stdenv, text
+, transformers, vector, warp
 }:
 mkDerivation {
   pname = "teletype-server";
@@ -8,7 +9,8 @@ mkDerivation {
   isLibrary = false;
   isExecutable = true;
   executableHaskellDepends = [
-    base configurator hstdlib servant servant-server warp
+    async base configurator hstdlib optparse-applicative servant
+    servant-server text transformers vector warp
   ];
   license = stdenv.lib.licenses.mit;
 }
