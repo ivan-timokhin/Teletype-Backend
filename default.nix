@@ -29,4 +29,35 @@ in with nixpkgs; rec {
   hstdlib = import ./hstdlib { pkgs = nixpkgs; inherit tdlib; inherit compiler; };
 
   teletype-server = import ./teletype-server { pkgs = nixpkgs; inherit hstdlib; inherit compiler; };
+
+  docker-image =
+  let
+    entrypoint = writeScript "entrypoint.sh" ''
+    #!${stdenv.shell}
+    set -e
+
+    exec "$@"
+    '';
+  in
+  dockerTools.buildImage {
+    name = "teletype-server";
+    contents = [ teletype-server ];
+
+    runAsRoot = ''
+    #!${stdenv.shell}
+    ${dockerTools.shadowSetup}
+    '';
+
+    config = {
+      Cmd = [ "teletype-server" ];
+      Entrypoint = [ entrypoint ];
+      ExposedPorts = {
+        "8080/tcp" = {};
+      };
+      WorkingDir = "/teletype";
+      Volumes = {
+        "/teletype" = {};
+      };
+    };
+  };
 }
