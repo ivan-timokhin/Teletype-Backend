@@ -1,0 +1,32 @@
+telegram {
+  phone-number = "$(PHONE)"
+  
+  storage {
+    database-directory = "/tmp/teletype/db"
+    files-directory = "/tmp/teletype/files"
+    files-database = off
+    chat-info-database = off
+    message-database = off
+    encryption-key = "$(ENCRYPTION_KEY)"
+  }
+  
+  api {
+    id = 00000 # substitute your own id FIXME
+    hash = "$(API_HASH)"
+  }
+  
+  system {
+    language-code = "$(LANG)" # ???
+    device = "PC"
+    version = "NIXOS 18.03" # ???
+  }
+  
+  proxy {
+    server = "$(PROXY_SERVER)"
+    port = 1080
+    username = "$(PROXY_USERNAME)"
+    password = "$(PROXY_PASSWORD)"
+  }
+  
+  timeout = 300
+}
